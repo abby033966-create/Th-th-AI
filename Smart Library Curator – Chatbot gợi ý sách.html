@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Smart Library Curator – Chatbot gợi ý sách</title>
+<style>
+:root{--bg1:#fff6e5;--bg2:#e5f3ff;--bg3:#f2e8ff;--card:#fff;--ink:#23223a;--mut:#6b6a85;--bd:#e6e2f3;--p1:#6c5ce7;--p2:#00b894;--new:#fff2d4;--newbd:#ffb84d;--warn:#c2410c;--ts:85%;--tl:92%;--tk:30%;--sh:0 4px 14px rgba(80,60,160,.13);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg1:#16142b;--bg2:#10222b;--bg3:#201536;--card:#1f1e38;--ink:#efeeff;--mut:#aaa9c7;--bd:#36345c;--new:#3a2e14;--warn:#ffa56b;--ts:35%;--tl:25%;--tk:88%;--sh:none;color-scheme:dark}}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html,body{height:100%;margin:0}html{background:linear-gradient(160deg,var(--bg1),var(--bg2) 55%,var(--bg3))}
+body{color:var(--ink);font:15px/1.55 ui-rounded,"SF Pro Rounded",Nunito,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;max-width:780px;margin:0 auto}
+header{display:flex;align-items:center;gap:12px;margin:10px 12px 0;padding:12px 14px;border-radius:20px;background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;box-shadow:var(--sh)}
+.logo{font-size:30px;background:rgba(255,255,255,.22);border-radius:16px;width:48px;height:48px;display:grid;place-items:center}
+.ht{flex:1;min-width:0}h1{font-size:19px;margin:0}header p{margin:0;font-size:12.5px;opacity:.92}
+.pill{font:inherit;font-size:13px;font-weight:700;padding:7px 12px;border:0;border-radius:99px;background:#fff;color:var(--p1);cursor:pointer}
+#ver{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:8px 14px 0;font-size:12.5px;color:var(--mut)}
+#ver button{font:inherit;font-size:12.5px;padding:4px 10px;border-radius:99px;border:1.5px solid var(--bd);background:var(--card);color:var(--ink);cursor:pointer}
+#ver button.on{background:var(--p1);border-color:var(--p1);color:#fff;font-weight:700}
+#panel{margin:8px 12px 0;padding:12px 14px;border-radius:16px;background:var(--card);border:1.5px solid var(--bd);box-shadow:var(--sh);max-height:42vh;overflow:auto}
+#panel h2{font-size:16px;margin:0 0 4px}.hint{color:var(--mut);font-size:12.5px;margin:4px 0}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px}th,td{padding:6px 8px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}th{color:var(--mut)}
+#log{flex:1;overflow-y:auto;padding:14px 14px 6px;display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:8px;align-items:flex-end}.row.me{justify-content:flex-end}
+.av{flex:none;width:34px;height:34px;border-radius:50%;background:var(--card);border:1.5px solid var(--bd);display:grid;place-items:center;font-size:19px}
+.m{max-width:88%;padding:10px 13px;border-radius:18px;background:var(--card);border:1.5px solid var(--bd);border-bottom-left-radius:6px;box-shadow:var(--sh)}
+.me .m{background:linear-gradient(135deg,var(--p1),#8e7cff);color:#fff;border:0;border-bottom-left-radius:18px;border-bottom-right-radius:6px}
+.book{margin-top:10px;padding:10px 12px;border-radius:14px;background:hsl(var(--h) var(--ts) var(--tl) / .35);border:1.5px solid var(--bd);border-left:6px solid hsl(var(--h) 70% 55%)}
+.book.new{background:var(--new);border-color:var(--newbd)}
+.book b{display:block;font-size:15.5px}.book small{color:var(--mut)}
+.tgs{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
+.tg{font-size:12px;padding:2px 8px;border-radius:99px;background:hsl(var(--h) var(--ts) var(--tl));color:hsl(var(--h) 55% var(--tk))}
+.why{font-size:14px}.badge{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--newbd);color:#3a2700;margin-right:5px}.badge.w{background:var(--warn);color:#fff}
+.stars{display:flex;align-items:center;gap:2px;margin-top:6px;font-size:12px;color:var(--mut)}.stars span{margin-right:4px}
+.star{font-size:20px;line-height:1;padding:2px;border:0;background:none;color:var(--bd);cursor:pointer}.star.on{color:#f5b301}
+.dots i{display:inline-block;width:8px;height:8px;margin:0 2px;border-radius:50%;background:var(--p1);animation:b 1s infinite}.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,80%,100%{opacity:.3;transform:translateY(0)}40%{opacity:1;transform:translateY(-4px)}}
+@media(prefers-reduced-motion:reduce){.dots i{animation:none}}
+#chips{padding:4px 14px 8px;display:flex;gap:7px;overflow-x:auto}
+.chip{flex:none;font:inherit;font-size:13px;padding:6px 12px;border-radius:99px;border:1.5px solid var(--bd);background:var(--card);color:var(--ink);cursor:pointer}
+form{display:flex;gap:8px;padding:6px 14px 8px}
+input{flex:1;min-width:0;font:inherit;padding:12px 14px;border-radius:99px;border:2px solid var(--bd);background:var(--card);color:var(--ink)}input:focus{outline:0;border-color:var(--p1)}
+button.go{font:inherit;font-weight:700;padding:0 20px;border:0;border-radius:99px;background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;cursor:pointer}
+footer{padding:0 16px 10px;font-size:12px;color:var(--mut);text-align:center}
+#tabs{display:flex;gap:8px;padding:10px 14px 0}
+#tabs button{flex:1;font:inherit;font-weight:700;font-size:14px;padding:10px;border-radius:14px;border:2px solid var(--bd);background:var(--card);color:var(--ink);cursor:pointer}
+#tabs button.on{background:linear-gradient(135deg,var(--p1),var(--p2));border-color:transparent;color:#fff}
+.pane{flex:1;min-height:0;display:flex;flex-direction:column}
+#quizv{overflow-y:auto;padding:12px 14px}
+.q{background:var(--card);border:1.5px solid var(--bd);border-radius:16px;padding:12px;margin-bottom:10px;box-shadow:var(--sh)}
+.q h3{font-size:15px;margin:0 0 8px}.opts{display:flex;flex-wrap:wrap;gap:7px}
+.opt{font:inherit;font-size:13.5px;padding:8px 12px;border-radius:99px;border:1.5px solid var(--bd);background:var(--bg2);color:var(--ink);cursor:pointer}
+.opt.on{background:var(--p1);border-color:var(--p1);color:#fff;font-weight:700}
+button.big{width:100%;padding:13px;font-size:15px}
+.acts{display:flex;gap:8px;margin:10px 0 16px;flex-wrap:wrap}.acts .chip{font-weight:700}
+.ai{white-space:pre-wrap}.src{font-size:11px;color:var(--mut);margin-top:6px;white-space:normal}
+#fav{width:100%;border-radius:14px}
+textarea{font:inherit;width:100%;padding:10px 12px;border-radius:14px;border:2px solid var(--bd);background:var(--card);color:var(--ink);resize:vertical}textarea:focus{outline:0;border-color:var(--p1)}
+.btnrow{display:flex;gap:8px;align-items:stretch}.btnrow .go{flex:1}.btnrow .chip{font-weight:700}.exs{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Poppins:wght@400;500;600&display=swap">
+<style>
+/* ===== Giao diện nâng cấp: sách cổ điển, sang trọng ===== */
+:root{--bg1:#fbf6f0;--bg2:#f6ebe4;--bg3:#f1e9df;--card:#fff;--ink:#2a1d17;--mut:#7a6a60;--bd:#eadfd2;--p1:#1f3a5f;--p2:#b8995a;--acc:#1f3a5f;--onacc:#fff;--gold:#b8995a;--new:#fff4de;--newbd:#d9b25f;--sh:0 6px 20px rgba(60,35,20,.08);--serif:"Playfair Display",Georgia,"Times New Roman",serif}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg1:#17110d;--bg2:#1b1410;--bg3:#120e0b;--card:#241b16;--ink:#f4ebe2;--mut:#b7a79a;--bd:#3b2e26;--p1:#d8b878;--p2:#b8995a;--acc:#d8b878;--onacc:#1a120c;--gold:#d8b878;--new:#3a2e14;--newbd:#b8995a;--sh:none;color-scheme:dark}}
+html{background:linear-gradient(180deg,var(--bg1),var(--bg2) 60%,var(--bg3))}
+body{max-width:820px;font:14.5px/1.6 Poppins,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:linear-gradient(120deg,#1c120d,#3a2218 62%,#51301f);color:#f7efe6;border:1px solid rgba(184,153,90,.4);border-radius:16px;padding:18px 20px;gap:14px}
+.logo{background:rgba(255,255,255,.08);border:1px solid rgba(216,184,120,.5);border-radius:14px}
+h1{font-family:var(--serif);font-weight:500;font-size:24px;letter-spacing:.3px}
+h1::after{content:"";display:block;width:42px;height:2px;background:#d8b878;margin:6px 0 5px}
+header p{font-size:12.5px;opacity:.85}
+.pill{background:transparent;border:1px solid #d8b878;color:#f0dcae;font-weight:500;letter-spacing:.2px}
+.pill:hover{background:rgba(216,184,120,.18)}
+#tabs{gap:0;padding:12px 14px 0;border-bottom:1px solid var(--bd);margin:0 12px}
+#tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:var(--mut);font-weight:500;padding:10px 6px}
+#tabs button.on{background:transparent;color:var(--ink);border-bottom-color:var(--gold);font-weight:600}
+#panel{border-radius:12px}
+#panel h2,.q h3,#quizv>h3,#qres h3{font-family:var(--serif);font-weight:600}
+#log{padding-top:18px}
+.m{border-radius:14px;border-bottom-left-radius:4px;box-shadow:var(--sh)}
+.me .m{background:var(--acc);color:var(--onacc);border-bottom-left-radius:14px;border-bottom-right-radius:4px}
+.av{border-color:var(--gold)}
+.book{display:block;border-radius:12px;background:var(--card);border:1px solid var(--bd);border-left:4px solid hsl(var(--h) 45% 48%);box-shadow:var(--sh);padding:12px 14px}
+.book.new{background:var(--new);border-color:var(--newbd);border-left-color:var(--newbd)}
+.bh{display:flex;gap:12px;align-items:flex-start}
+.bt{min-width:0}
+.cv{flex:none;width:50px;height:70px;border-radius:2px 6px 6px 2px;background:linear-gradient(135deg,hsl(var(--h) 45% 40%),hsl(var(--h) 50% 24%));display:grid;place-items:center;font-size:20px;box-shadow:2px 3px 8px rgba(0,0,0,.28),inset 3px 0 0 rgba(255,255,255,.2)}
+.book b{font-family:var(--serif);font-weight:600;font-size:16.5px;line-height:1.3}
+.tg{background:var(--bg2);color:var(--mut);border:1px solid var(--bd);border-radius:6px;font-size:11.5px}
+.badge{background:var(--gold);color:#241505;border-radius:4px;font-weight:600;letter-spacing:.2px}
+.badge.w{background:var(--warn);color:#fff}
+.why{color:var(--ink);opacity:.9}
+.chip{border-radius:99px;background:var(--card);border-color:var(--bd)}
+.chip:hover{border-color:var(--gold)}
+input:focus,textarea:focus{border-color:var(--gold)}
+input,textarea{border-width:1.5px}
+button.go{background:var(--acc);color:var(--onacc);font-weight:600;letter-spacing:.3px}
+button.go:hover{filter:brightness(1.12)}
+.q{border-radius:12px;border-width:1px}
+.opt{background:var(--bg2);border-width:1px}
+.opt:hover{border-color:var(--gold)}
+.opt.on{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
+.dots i{background:var(--gold)}
+footer{font-size:11.5px;line-height:1.5}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+</style>
+</head>
+<body>
+<header><div class="logo" id="logo"></div><div class="ht"><h1>Smart Library Curator</h1><p>Bạn nói sở thích, mình tìm sách hợp gu · <span id="n"></span> đầu sách</p></div><button id="stb" class="pill" type="button">📊 Đánh giá</button></header>
+<nav id="tabs"><button data-t="chat" class="on" type="button">💬 Chat với AI</button><button data-t="quiz" type="button">📝 Trắc nghiệm</button></nav>
+<section id="panel" hidden></section>
+<main id="chatv" class="pane"><div id="log"></div><div id="chips"></div>
+<form id="f"><input id="q" autocomplete="off" placeholder="Kể sở thích, hoặc nhập 1 sách/phim bạn mê…"><button class="go">Gửi ➤</button></form></main>
+<main id="quizv" class="pane" hidden></main>
+<footer>Gợi ý chỉ để tham khảo, bạn là người chọn 💛 Câu bạn gõ trong “Chat với AI” được gửi tới AI để trả lời, nên đừng nhập thông tin cá nhân. Trang không lưu lịch sử đọc. <a href="#" id="clr" style="color:inherit">Xóa cuộc trò chuyện</a></footer>
+<script>
+// KHO SÁCH: Tên | Tác giả | Nhãn nội dung. Thêm/sửa sách bằng cách sửa các dòng bên dưới.
+const D=[
+["Văn học Việt Nam",`Số Đỏ|Vũ Trọng Phụng|Châm biếm, xã hội cũ, kinh điển
+Dế Mèn Phiêu Lưu Ký|Tô Hoài|Thiếu nhi, phiêu lưu, bài học trưởng thành
+Tắt Đèn|Ngô Tất Tố|Hiện thực phê phán, nông thôn xưa
+Chí Phèo|Nam Cao|Hiện thực phê phán, bi kịch, nhân văn
+Mắt Biếc|Nguyễn Nhật Ánh|Tình cảm tuổi học trò, lãng mạn, hoài niệm
+Cho Tôi Xin Một Vé Đi Tuổi Thơ|Nguyễn Nhật Ánh|Tuổi thơ, hài hước, nhẹ nhàng
+Cánh Đồng Bất Tận|Nguyễn Ngọc Tư|Miền Tây, thân phận con người, buồn
+Nỗi Buồn Chiến Tranh|Bảo Ninh|Chiến tranh, hậu chiến, tâm lý sâu sắc
+Tuổi Thơ Dữ Dội|Phùng Quán|Lịch sử, thiếu niên anh hùng, xúc động
+Vang Bóng Một Thời|Nguyễn Tuân|Văn hóa, truyền thống, nghệ thuật
+Đất Rừng Phương Nam|Đoàn Giỏi|Phiêu lưu, thiên nhiên Nam Bộ
+Làm Đĩ|Vũ Trọng Phụng|Xã hội, tâm lý, hiện thực`],
+["Văn học nước ngoài",`Nhà Giả Kim|Paulo Coelho|Triết lý, hành trình, theo đuổi ước mơ
+Hoàng Tử Bé|Antoine de Saint-Exupéry|Triết lý, thiếu nhi cho người lớn, tình bạn
+Giết Con Chim Nhại|Harper Lee|Công lý, phân biệt chủng tộc, giáo dục
+1984|George Orwell|Phản địa đàng, chính trị, viễn tưởng
+Trại Súc Vật|George Orwell|Ngụ ngôn chính trị, châm biếm
+Trăm Năm Cô Đơn|Gabriel García Márquez|Hiện thực huyền ảo, gia tộc
+Tội Ác Và Hình Phạt|Fyodor Dostoevsky|Tâm lý tội phạm, triết học, Nga
+Bố Già (The Godfather)|Mario Puzo|Tội phạm, mafia, gia đình, quyền lực
+Rừng Na Uy|Haruki Murakami|Tình yêu, cô đơn, tuổi trẻ, Nhật Bản
+Kafka Bên Bờ Biển|Haruki Murakami|Siêu thực, triết lý, bí ẩn
+Bắt Trẻ Đồng Xanh|J.D. Salinger|Tuổi mới lớn, nổi loạn, tâm lý
+Ông Già Và Biển Cả|Ernest Hemingway|Nghị lực, thiên nhiên, kinh điển
+Không Gia Đình|Hector Malot|Phiêu lưu, tình cảm gia đình, cảm động
+Hai Số Phận|Jeffrey Archer|Kịch tính, đối đầu, tham vọng
+Cuốn Theo Chiều Gió|Margaret Mitchell|Tình yêu, chiến tranh, lịch sử Mỹ
+Kiêu Hãnh Và Định Kiến|Jane Austen|Tình cảm cổ điển, xã hội Anh
+Tên Của Hoa Hồng|Umberto Eco|Trinh thám lịch sử, trung cổ, triết học
+Chiến Binh Cầu Vồng|Andrea Hirata|Giáo dục, nghị lực, truyền cảm hứng`],
+["Trinh thám, kinh dị, viễn tưởng",`Sherlock Holmes (Toàn tập)|Arthur Conan Doyle|Trinh thám cổ điển, suy luận
+Mật Mã Da Vinci|Dan Brown|Trinh thám, tôn giáo, biểu tượng học
+Án Mạng Trên Chuyến Tàu Tốc Hành Phương Đông|Agatha Christie|Trinh thám, bí ẩn
+Phía Sau Nghi Can X|Higashino Keigo|Trinh thám Nhật Bản, tâm lý, tình yêu
+Bạch Dạ Hành|Higashino Keigo|Trinh thám, tâm lý đen tối, bí ẩn
+Sự Im Lặng Của Bầy Cừu|Thomas Harris|Kinh dị tâm lý, tội phạm
+Xứ Cát (Dune)|Frank Herbert|Khoa học viễn tưởng, vũ trụ, chính trị
+Tam Thể|Lưu Từ Hân|Khoa học viễn tưởng, vật lý, người ngoài hành tinh
+Người Về Từ Sao Hỏa|Andy Weir|Sinh tồn, khoa học vũ trụ, hài hước
+451 Độ F|Ray Bradbury|Phản địa đàng, kiểm duyệt, tương lai
+Cỗ Máy Thời Gian|H.G. Wells|Du hành thời gian, viễn tưởng cổ điển
+IT (Gã Hề Ma Quái)|Stephen King|Kinh dị, siêu nhiên, tuổi thơ`],
+["Tâm lý học và phát triển bản thân",`Đắc Nhân Tâm|Dale Carnegie|Giao tiếp, ứng xử, kinh điển
+Thay Đổi Tí Hon, Hiệu Quả Bất Ngờ (Atomic Habits)|James Clear|Thói quen, năng suất
+Tư Duy Nhanh Và Chậm|Daniel Kahneman|Tâm lý học hành vi, ra quyết định
+Đàn Ông Sao Hỏa, Đàn Bà Sao Kim|John Gray|Tình yêu, hôn nhân, tâm lý giới tính
+Đi Tìm Lẽ Sống|Viktor Frankl|Tâm lý trị liệu, ý nghĩa cuộc sống, nghị lực
+Dám Bị Ghét|Ichiro Kishimi & Fumitake Koga|Triết học Adler, tự do tâm lý
+Phi Lý Trí|Dan Ariely|Kinh tế học hành vi, tâm lý tiêu dùng
+Cà Phê Cùng Tony|Tony Buổi Sáng|Truyền cảm hứng, khởi nghiệp, giới trẻ
+Tuổi Trẻ Đáng Giá Bao Nhiêu|Rosie Nguyễn|Kỹ năng sống, định hướng tuổi trẻ
+7 Thói Quen Hiệu Quả|Stephen R. Covey|Quản trị bản thân, lãnh đạo
+Tâm Lý Học Đám Đông|Gustave Le Bon|Xã hội học, hành vi tập thể
+Hiểu Về Trái Tim|Minh Niệm|Chữa lành, thiền, cảm xúc
+Muôn Kiếp Nhân Sinh|Nguyên Phong|Tâm linh, nhân quả, triết lý
+Hành Trình Về Phương Đông|Baird T. Spalding|Tâm linh, văn hóa Ấn Độ
+Tĩnh Lặng|Ryan Holiday|Chủ nghĩa khắc kỷ, bình yên nội tâm`],
+["Kinh tế, kinh doanh, tài chính",`Cha Giàu Cha Nghèo|Robert Kiyosaki|Tài chính cá nhân, đầu tư
+Nhà Đầu Tư Thông Minh|Benjamin Graham|Đầu tư chứng khoán, giá trị
+Từ Tốt Đến Vĩ Đại|Jim Collins|Quản trị doanh nghiệp, chiến lược
+Khởi Nghiệp Tinh Gọn|Eric Ries|Startup, đổi mới sáng tạo
+Không Đến Một (Zero to One)|Peter Thiel|Khởi nghiệp, công nghệ, độc quyền
+Chiến Tranh Tiền Tệ|Song Hongbing|Tài chính vĩ mô, lịch sử ngân hàng
+Tâm Lý Học Về Tiền|Morgan Housel|Tài chính cá nhân, hành vi tiền bạc
+Kinh Tế Học Hài Hước (Freakonomics)|Steven D. Levitt|Kinh tế ứng dụng, đời sống
+Bí Mật Tư Duy Triệu Phú|T. Harv Eker|Tư duy làm giàu, tài chính
+Người Giàu Có Nhất Thành Babylon|George S. Clason|Tiết kiệm, quản lý tiền bạc
+Tỷ Phú Bán Giày|Tony Hsieh|Văn hóa doanh nghiệp, dịch vụ khách hàng
+Chiến Lược Đại Dương Xanh|W. Chan Kim|Kinh doanh, cạnh tranh, sáng tạo
+Điểm Bùng Phát (The Tipping Point)|Malcolm Gladwell|Marketing, xu hướng xã hội
+Binh Pháp Tôn Tử|Tôn Vũ|Chiến lược, lãnh đạo, quân sự ứng dụng
+Nghệ Thuật Đàm Phán|Donald Trump|Thương lượng, bất động sản, kinh doanh`],
+["Khoa học, công nghệ, tri thức",`Lược Sử Thời Gian|Stephen Hawking|Vật lý thiên văn, vũ trụ học
+Vũ Trụ Trong Vỏ Hạt Dẻ|Stephen Hawking|Vật lý lượng tử, không gian
+Vũ Trụ (Cosmos)|Carl Sagan|Thiên văn học, khoa học phổ thông
+Súng, Vi Trùng Và Thép|Jared Diamond|Nhân chủng học, lịch sử văn minh
+Gen: Lịch Sử Và Tương Lai Của Nhân Loại|Siddhartha Mukherjee|Sinh học, di truyền
+Siêu Trí Tuệ (Superintelligence)|Nick Bostrom|Trí tuệ nhân tạo AI, tương lai
+AI 2041|Kai-Fu Lee & Chen Qiufan|Công nghệ AI, viễn tưởng tương lai
+Bản Thiết Kế Vĩ Đại|Stephen Hawking|Triết học khoa học, nguồn gốc vũ trụ
+Thế Giới Phẳng|Thomas L. Friedman|Toàn cầu hóa, công nghệ, kinh tế
+21 Bài Học Cho Thế Kỷ 21|Yuval Noah Harari|Công nghệ, xã hội hiện đại
+Cơ Thể Người: Hướng Dẫn Sử Dụng|Bill Bryson|Y học, giải phẫu, hài hước
+Vạn Vật Vận Hành Như Thế Nào|Vaclav Smil|Năng lượng, môi trường, khoa học`],
+["Lịch sử, văn hóa, tiểu sử",`Sapiens: Lược Sử Loài Người|Yuval Noah Harari|Lịch sử nhân loại, tiến hóa
+Homo Deus: Lược Sử Tương Lai|Yuval Noah Harari|Tương lai nhân loại, công nghệ
+Việt Nam Sử Lược|Trần Trọng Kim|Lịch sử Việt Nam, tổng quan
+Đại Việt Sử Ký Toàn Thư|Ngô Sĩ Liên|Lịch sử cổ đại Việt Nam
+Steve Jobs|Walter Isaacson|Tiểu sử, công nghệ, Apple, sáng tạo
+Elon Musk|Ashlee Vance|Tiểu sử, khởi nghiệp, vũ trụ, xe điện
+Nhật Ký Đặng Thùy Trâm|Đặng Thùy Trâm|Hồi ký chiến tranh, lịch sử Việt Nam
+Nhật Ký Anne Frank|Anne Frank|Hồi ký, Thế chiến II, nhân văn
+Hoa Cúc Và Gươm|Ruth Benedict|Văn hóa Nhật Bản, nhân học
+Sử Việt - 12 Khúc Tráng Ca|Dũng Phan|Lịch sử Việt Nam, kể chuyện hấp dẫn`],
+["Nghệ thuật, sức khỏe, lối sống",`Nhân Tố Enzyme|Hiromi Shinya|Sức khỏe, dinh dưỡng, tiêu hóa
+Sao Chúng Ta Lại Ngủ (Why We Sleep)|Matthew Walker|Giấc ngủ, khoa học thần kinh
+Câu Chuyện Nghệ Thuật (The Story of Art)|E.H. Gombrich|Lịch sử mỹ thuật, hội họa
+Nghệ Thuật Tinh Tế Của Việc “Đếch” Quan Tâm|Mark Manson|Lối sống, tâm lý hiện đại
+Lối Sống Tối Giản Của Người Nhật|Sasaki Fumio|Tối giản, dọn dẹp, bình yên
+Ikigai: Bí Mật Sống Trường Thọ Và Hạnh Phúc Của Người Nhật|Héctor García|Lối sống, mục đích sống`],
+["Kinh điển trước thế kỷ 19",`Odyssey|Homer|Sử thi, hành trình, phiêu lưu, thần thoại Hy Lạp
+Hamlet|William Shakespeare|Kịch, trả thù, quyền lực, bi kịch
+Don Quixote|Miguel de Cervantes|Hài hước, châm biếm, hiệp sĩ, tiểu thuyết đầu tiên
+Thần Khúc (The Divine Comedy)|Dante Alighieri|Trường ca, tôn giáo, hành trình, văn học Ý
+Truyện Genji (The Tale of Genji)|Murasaki Shikibu|Tình cảm, cung đình, Nhật Bản cổ
+Truyện Canterbury (The Canterbury Tales)|Geoffrey Chaucer|Truyện kể, xã hội Trung cổ, hài hước, nước Anh
+Robinson Crusoe|Daniel Defoe|Sinh tồn, hoang đảo, phiêu lưu
+Gulliver Du Ký (Gulliver's Travels)|Jonathan Swift|Phiêu lưu, châm biếm, xã hội, viễn tưởng
+Candide|Voltaire|Châm biếm, triết lý, hành trình, Khai sáng`],
+["Kinh điển thế kỷ 19",`Chiến Tranh Và Hòa Bình (War and Peace)|Leo Tolstoy|Chiến tranh, lịch sử Nga, gia đình, tình yêu
+Moby-Dick|Herman Melville|Phiêu lưu biển, ám ảnh, số phận, văn học Mỹ
+Frankenstein|Mary Shelley|Khoa học viễn tưởng, kinh dị, đạo đức khoa học
+Jane Eyre|Charlotte Brontë|Tình cảm cổ điển, tự trọng, mồ côi, nước Anh
+Đồi Gió Hú (Wuthering Heights)|Emily Brontë|Tình yêu, trả thù, bi kịch, Gothic
+Bà Bovary (Madame Bovary)|Gustave Flaubert|Hôn nhân, mơ mộng, bi kịch, nước Pháp
+Những Kỳ Vọng Lớn Lao (Great Expectations)|Charles Dickens|Mồ côi, tham vọng, trưởng thành, xã hội Anh
+Những Người Khốn Khổ (Les Misérables)|Victor Hugo|Chuộc tội, lòng trắc ẩn, nghèo đói, nước Pháp
+Middlemarch|George Eliot|Xã hội Anh, hôn nhân, đời sống thị trấn
+Anna Karenina|Leo Tolstoy|Tình yêu, hôn nhân, xã hội Nga, bi kịch
+Anh Em Nhà Karamazov (The Brothers Karamazov)|Fyodor Dostoevsky|Triết học, tôn giáo, gia đình, tâm lý, Nga
+Những Cuộc Phiêu Lưu Của Huckleberry Finn (Adventures of Huckleberry Finn)|Mark Twain|Phiêu lưu, tình bạn, phân biệt chủng tộc, nước Mỹ
+Chân Dung Dorian Gray (The Picture of Dorian Gray)|Oscar Wilde|Tuổi trẻ, cái đẹp, đạo đức, Gothic
+Gia Đình Buddenbrook (Buddenbrooks)|Thomas Mann|Gia tộc, suy tàn, xã hội Đức, Nobel`],
+["Kinh điển thế kỷ 20",`Đi Tìm Thời Gian Đã Mất (In Search of Lost Time)|Marcel Proust|Ký ức, thời gian, hoài niệm, nước Pháp
+Hóa Thân (The Metamorphosis)|Franz Kafka|Siêu thực, cô lập, phi lý, tâm lý
+Ulysses|James Joyce|Dòng ý thức, thử nghiệm, Dublin, khó đọc
+Bà Dalloway (Mrs Dalloway)|Virginia Woolf|Dòng ý thức, tâm lý, một ngày, London
+Gatsby Vĩ Đại (The Great Gatsby)|F. Scott Fitzgerald|Giấc mơ Mỹ, tình yêu, giàu sang, bi kịch
+Vụ Án (The Trial)|Franz Kafka|Phi lý, quyền lực, siêu thực, pháp luật
+Âm Thanh Và Cuồng Nộ (The Sound and the Fury)|William Faulkner|Gia đình suy tàn, nhiều giọng kể, miền Nam nước Mỹ
+Thế Giới Mới Tươi Đẹp (Brave New World)|Aldous Huxley|Phản địa đàng, khoa học viễn tưởng, xã hội tương lai
+Chùm Nho Phẫn Nộ (The Grapes of Wrath)|John Steinbeck|Đại suy thoái, nông dân, nghèo đói, công bằng
+Kẻ Xa Lạ (The Stranger)|Albert Camus|Triết học hiện sinh, phi lý, ý nghĩa cuộc sống
+Của Chuột Và Người (Of Mice and Men)|John Steinbeck|Tình bạn, ước mơ, Đại suy thoái, bi kịch
+Nghệ Nhân Và Margarita (The Master and Margarita)|Mikhail Bulgakov|Châm biếm, siêu thực, tình yêu, Nga
+Sụp Đổ (Things Fall Apart)|Chinua Achebe|Châu Phi, thực dân, văn hóa Igbo, thay đổi xã hội`],
+["Tiểu thuyết hiện đại",`Người Vô Hình (Invisible Man)|Ralph Ellison|Phân biệt chủng tộc, bản sắc, xã hội Mỹ
+Chúa Ruồi (Lord of the Flies)|William Golding|Sinh tồn, bản chất con người, trẻ em, hoang đảo
+Trên Đường (On the Road)|Jack Kerouac|Hành trình, tự do, thế hệ Beat, nước Mỹ
+Điều Khoản 22 (Catch-22)|Joseph Heller|Chiến tranh, châm biếm, phi lý, hài hước đen
+Lò Sát Sinh Số 5 (Slaughterhouse-Five)|Kurt Vonnegut|Chiến tranh, du hành thời gian, châm biếm
+Chuyện Người Tùy Nữ (The Handmaid's Tale)|Margaret Atwood|Phản địa đàng, quyền phụ nữ, thần quyền
+Người Yêu Dấu (Beloved)|Toni Morrison|Nô lệ, quá khứ ám ảnh, gia đình, Nobel
+Những Tàn Tích Của Ngày (The Remains of the Day)|Kazuo Ishiguro|Hồi tưởng, tiếc nuối, quản gia, nước Anh
+Cuộc Đời Của Pi (Life of Pi)|Yann Martel|Phiêu lưu biển, sinh tồn, niềm tin, triết lý
+Chuộc Lỗi (Atonement)|Ian McEwan|Lời nói dối, hối hận, chiến tranh, tình yêu
+Người Đua Diều (The Kite Runner)|Khaled Hosseini|Tình bạn, phản bội, chuộc lỗi, Afghanistan
+Con Đường (The Road)|Cormac McCarthy|Hậu tận thế, cha con, sinh tồn, Pulitzer
+Xứ Tuyết (Snow Country)|Yasunari Kawabata|Tình cảm, Nhật Bản, mong manh, Nobel
+Không Còn Là Con Người (No Longer Human)|Osamu Dazai|Cô độc, tâm lý, hòa nhập xã hội, Nhật Bản
+Đời Nhẹ Khôn Kham (The Unbearable Lightness of Being)|Milan Kundera|Tình yêu, tự do, triết lý, Praha
+Tình Yêu Thời Thổ Tả (Love in the Time of Cholera)|Gabriel García Márquez|Tình yêu chờ đợi, hiện thực huyền ảo, Nobel
+Mù Lòa (Blindness)|José Saramago|Xã hội, nhân tính, dịch bệnh, ngụ ngôn
+Cái Bóng Của Gió (The Shadow of the Wind)|Carlos Ruiz Zafón|Bí ẩn, sách, Barcelona, tình yêu`],
+["Triết học, tư tưởng và hồi ký",`Cộng Hòa (The Republic)|Plato|Triết học Hy Lạp, công lý, nhà nước lý tưởng
+Đạo Đức Kinh (Tao Te Ching)|Lão Tử|Triết học phương Đông, đạo, sống thuận tự nhiên
+Suy Tưởng (Meditations)|Marcus Aurelius|Chủ nghĩa khắc kỷ, bình thản, tự rèn luyện
+Quân Vương (The Prince)|Niccolò Machiavelli|Chính trị, quyền lực, chiến lược
+Walden|Henry David Thoreau|Sống giản dị, thiên nhiên, tự do
+Nguồn Gốc Các Loài (On the Origin of Species)|Charles Darwin|Tiến hóa, sinh học, chọn lọc tự nhiên
+Mùa Xuân Lặng Im (Silent Spring)|Rachel Carson|Môi trường, thuốc trừ sâu, khoa học
+Thứ Ba Với Morrie (Tuesdays with Morrie)|Mitch Albom|Hồi ký, thầy trò, ý nghĩa cuộc sống, xúc động
+Được Học (Educated)|Tara Westover|Hồi ký, giáo dục, nghị lực, gia đình`],
+["Thiếu nhi và giả tưởng",`Alice Ở Xứ Sở Thần Tiên (Alice's Adventures in Wonderland)|Lewis Carroll|Thiếu nhi, giả tưởng, phi lý, tưởng tượng
+Những Người Phụ Nữ Bé Nhỏ (Little Women)|Louisa May Alcott|Gia đình, chị em, trưởng thành, Nội chiến Mỹ
+Anne Tóc Đỏ Dưới Chái Nhà Xanh (Anne of Green Gables)|L.M. Montgomery|Mồ côi, tưởng tượng, tình bạn, trưởng thành
+Peter Pan (Peter and Wendy)|J.M. Barrie|Thiếu nhi, phiêu lưu, không muốn lớn
+Winnie-the-Pooh|A.A. Milne|Thiếu nhi, tình bạn, nhẹ nhàng
+Mạng Nhện Của Charlotte (Charlotte's Web)|E.B. White|Tình bạn, thiếu nhi, cảm động
+Matilda|Roald Dahl|Thiếu nhi, thiên tài, hài hước, yêu sách
+Hobbit|J.R.R. Tolkien|Giả tưởng, phiêu lưu, kho báu
+Chúa Tể Những Chiếc Nhẫn (The Lord of the Rings)|J.R.R. Tolkien|Giả tưởng, sử thi, phiêu lưu, thiện ác
+Biên Niên Sử Narnia (The Chronicles of Narnia)|C.S. Lewis|Giả tưởng, thiếu nhi, phiêu lưu
+Foundation|Isaac Asimov|Khoa học viễn tưởng, đế chế, tương lai, chiến lược
+Phù Thủy Đất Biển (A Wizard of Earthsea)|Ursula K. Le Guin|Giả tưởng, phép thuật, trưởng thành
+Chỉ Nam Cho Người Đi Nhờ Thiên Hà (The Hitchhiker's Guide to the Galaxy)|Douglas Adams|Khoa học viễn tưởng, hài hước, vũ trụ, phi lý
+Harry Potter Và Hòn Đá Phù Thủy (Harry Potter and the Philosopher's Stone)|J.K. Rowling|Giả tưởng, phép thuật, tuổi mới lớn, tình bạn`]
+];
+const B=D.flatMap(([c,s])=>s.split("\n").map(l=>{const[t,a,k]=l.split("|");return{t,a,k,g:c}}));
+const MATURE=/^(Làm Đĩ|Bố Già|IT |Sự Im Lặng|Rừng Na Uy|Nỗi Buồn Chiến Tranh|Người Yêu Dấu|Chuyện Người Tùy Nữ|Người Đua Diều|Mù Lòa|Không Còn Là Con Người|Ulysses|Lò Sát Sinh Số 5|Con Đường)/;
+n.textContent=B.length;
+const STOP=new Set("la va cho toi minh em thich muon doc sach nhung cac co khong mot nao nhe goi y ve nhu cuon hay can tim duoc cua voi rat giong me hoc".split(" "));
+const N=s=>s.toLowerCase().replace(/đ/g,"d").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g," ").trim();
+const words=s=>N(s).split(" ").filter(w=>w.length>1&&!STOP.has(w));
+const grams=s=>{const t=words(s),g=[...t];for(let i=0;i<t.length-1;i++)g.push(t[i]+"_"+t[i+1]);return g};
+const cos=(a,b)=>{let d=0,x=0,y=0;for(const k in a){x+=a[k]*a[k];if(b[k])d+=a[k]*b[k]}for(const k in b)y+=b[k]*b[k];return x&&y?d/Math.sqrt(x*y):0};
+const mk=txt=>{const docs=B.map(txt),df={};docs.forEach(d=>new Set(d).forEach(w=>df[w]=(df[w]||0)+1));const idf=w=>Math.log((B.length+1)/(df[w]+1))+1;
+  const vec=g=>{const v={};g.forEach(w=>{if(df[w])v[w]=(v[w]||0)+idf(w)});return v};return{vec,dv:docs.map(vec)}};
+const VER={B:mk(b=>grams([b.g,b.k,b.k,b.t,b.a].join(" ")))};
+let cur="B",vec=VER.B.vec,dv=VER.B.dv;
+const alias=t=>{const m=t.match(/^(.*?)\s*\((.*)\)\s*$/);return (m?[m[1],m[2]]:[t]).flatMap(x=>[x,x.split(":")[0]])};
+const mature=b=>MATURE.test(b.t);
+const shuffle=a=>[...a].sort(()=>Math.random()-.5);
+
+function recommend(text){
+  const nq=" "+N(text)+" ";
+  if(/ ngau nhien /.test(nq)){
+    const seen=new Set(),pick=[];
+    shuffle(B.keys()).forEach(i=>{if(pick.length<3&&!seen.has(B[i].g)&&!mature(B[i])){seen.add(B[i].g);pick.push({i,why:"Chọn ngẫu nhiên từ nhóm “"+B[i].g+"” để bạn thử cái mới."})}});
+    return{intro:"Đây là 3 cuốn ngẫu nhiên, mỗi cuốn một nhóm khác nhau:",top:pick};
+  }
+  const liked=B.findIndex(b=>alias(b.t).some(x=>{const n=N(x);return n.length>=9?nq.includes(" "+n+" "):n.length>=4&&(nq.includes(" giong "+n+" ")||nq.includes(" nhu "+n+" "))}));
+  const qv=vec(grams(text)),qw=new Set(words(text));
+  if(liked>=0){const lv=dv[liked];for(const k in lv)qv[k]=(qv[k]||0)+lv[k];words(B[liked].k).forEach(w=>qw.add(w))}
+  const sc=dv.map((v,i)=>({i,s:i===liked?-1:cos(qv,v)})).sort((a,b)=>b.s-a.s);
+  const why=i=>{const m=B[i].k.split(", ").filter(k=>words(k).some(w=>qw.has(w)));
+    return m.length?"Vì trùng nội dung: "+m.join("; ")+".":"Cùng nhóm hoặc tác giả với điều bạn mô tả."};
+  if(sc[0].s<=0.01)return{intro:"Mình chưa bắt được sở thích của bạn. Thử nêu thể loại, chủ đề hoặc “giống” một cuốn bạn từng thích, hoặc gõ “ngẫu nhiên”.",top:[]};
+  const top=sc.filter(x=>x.s>0.01).slice(0,4).map(x=>({i:x.i,why:why(x.i)}));
+  const used=new Set(top.map(t=>B[t.i].g));
+  const cand=sc.filter(x=>x.s>=0&&!used.has(B[x.i].g)&&!mature(B[x.i]));
+  const ex=cand.find(x=>x.s>0.01)||shuffle(cand)[0];
+  return{intro:liked>=0?"Vì bạn thích “"+B[liked].t+"”, mình gợi ý:":"Dựa trên sở thích bạn vừa nói, mình gợi ý:",top,
+    explore:ex&&{i:ex.i,why:"Khác nhóm với các cuốn trên để bạn thoát khỏi “bong bóng lọc”. "+(ex.s>0.01?why(ex.i):"Hãy thử như một lựa chọn bất ngờ.")}};
+}
+
+const LOGO=z=>'<svg viewBox="0 0 64 64" width="'+z+'" height="'+z+'" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="#2a1810" stroke="#d8b878" stroke-width="2"/><path d="M32 46c-5-3.5-12-4-17-2V27c5-2 12-1.5 17 2zM32 46c5-3.5 12-4 17-2V27c-5-2-12-1.5-17 2z" fill="none" stroke="#d8b878" stroke-width="2.2" stroke-linejoin="round"/><path d="M32 29v17" stroke="#d8b878" stroke-width="2"/><path d="M20 33c3-.6 6-.2 8 1M20 37.5c3-.6 6-.2 8 1M44 33c-3-.6-6-.2-8 1M44 37.5c-3-.6-6-.2-8 1" fill="none" stroke="#b8995a" stroke-width="1.4" stroke-linecap="round"/><path d="M32 9l2.2 5.3 5.3 2.2-5.3 2.2L32 24l-2.2-5.3-5.3-2.2 5.3-2.2z" fill="#f0dcae"/></svg>';
+document.getElementById("logo").innerHTML=LOGO(40);
+const log=document.getElementById("log"),panel=document.getElementById("panel"),rows=[];
+const GI=D.map(x=>x[0]),EMO=["🇻🇳","🌍","🕵️","🧠","💼","🔬","🏛️","🎨","🏺","📜","🎭","🌆","🧭","🐉"];
+function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+function add(cls,build){const w=el("div","row "+cls);if(cls==="bot"){const a=el("div","av");a.innerHTML=LOGO(26);w.appendChild(a)}const d=el("div","m");build(d);w.appendChild(d);log.appendChild(w);log.scrollTop=log.scrollHeight;return w}
+function card(p,isNew,row){const b=B[p.i],gi=GI.indexOf(b.g),c=el("div","book"+(isNew?" new":""));c.style.setProperty("--h",gi*45+160);
+  const hd=el("div","bh"),cv=el("div","cv",EMO[gi]),tx=el("div","bt");cv.setAttribute("aria-hidden","true");tx.append(el("b","",b.t),el("small","",b.a+" · "+b.g));hd.append(cv,tx);c.appendChild(hd);
+  const tg=el("div","tgs");b.k.split(", ").forEach(k=>tg.appendChild(el("span","tg",k)));c.appendChild(tg);
+  const w=el("div","why");if(isNew)w.appendChild(el("span","badge","✨ Khám phá"));if(mature(b))w.appendChild(el("span","badge w","🔞 Nên hỏi thủ thư hoặc thầy cô"));w.append(p.why);c.appendChild(w);
+  const s=el("div","stars");s.appendChild(el("span","","Hợp với bạn?"));
+  for(let v=1;v<=5;v++){const x=el("button","star","★");x.type="button";x.title=v+"/5";x.onclick=()=>{row.r[p.i]=v;s.querySelectorAll(".star").forEach((y,j)=>y.classList.toggle("on",j<v))};s.appendChild(x)}
+  c.appendChild(s);return c}
+function track(r,text,ms){const all=[...r.top,...(r.explore?[r.explore]:[])],row={q:text,v:cur,ms,r:{},d:0};
+  if(all.length){row.d=new Set(all.map(p=>B[p.i].g)).size/all.length;rows.push(row)}return row}
+function localReply(text){
+  const t0=performance.now(),r=recommend(text),row=track(r,text,performance.now()-t0);
+  add("bot",d=>{d.append(r.intro);r.top.forEach(p=>d.appendChild(card(p,false,row)));if(r.explore)d.appendChild(card(r.explore,true,row))})}
+const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+function tr(cells,tag){const r=el("tr");cells.forEach(c=>r.appendChild(el(tag,"",c)));return r}
+function renderPanel(){panel.textContent="";
+  panel.append(el("h2","","📊 Bảng đánh giá hệ thống"),el("p","hint","Tự tính từ các lần bạn hỏi (cả Trắc nghiệm) và chấm sao ★. Chụp màn hình làm minh chứng (MTB 1.3.a). Dữ liệu chỉ nằm trong trang này."));
+  const t=el("table");t.appendChild(tr(["Lượt hỏi","Thời gian TB (ms)","Đa dạng TB","Điểm hợp TB (1–5)"],"th"));
+  {const rs=rows,st=rs.flatMap(x=>Object.values(x.r)),f=(x,d)=>x==null?"–":x.toFixed(d);
+    t.appendChild(tr([rs.length,f(avg(rs.map(x=>x.ms)),2),f(avg(rs.map(x=>x.d)),2),f(avg(st),2)+(st.length?" ("+st.length+" lượt chấm)":"")],"td"))}
+  const w=el("div","tw");w.appendChild(t);
+  panel.append(w,el("p","hint","Quy mô kho: "+B.length+" sách. Đa dạng = số nhóm khác nhau ÷ số sách gợi ý (1,00 là mỗi sách một nhóm). Thời gian đo cho bộ máy gợi ý, không gồm thời gian AI trả lời."))}
+document.getElementById("stb").onclick=()=>{panel.hidden=!panel.hidden;if(!panel.hidden)renderPanel()};
+document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>showTab(b.dataset.t));
+function showTab(t){document.getElementById("chatv").hidden=t!=="chat";document.getElementById("quizv").hidden=t!=="quiz";
+  document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("on",x.dataset.t===t));if(t==="quiz"&&!quizv.children.length)renderQuiz()}
+
+/* ===== CHAT VỚI AI (Claude) ===== */
+const SYS="Bạn là Smart Library Curator, thủ thư AI thân thiện cho học sinh lớp 10. Chỉ gợi ý sách có trong KHO SÁCH bên dưới và ghi đúng tên sách. Mỗi lần gợi ý: 3–4 cuốn kèm lý do một câu dựa trên nhãn nội dung, cộng 1 cuốn “Khám phá” khác nhóm với các cuốn còn lại để tránh bong bóng lọc. Nếu thiếu thông tin thì hỏi lại tối đa 1 câu. Sách đánh dấu [NL] có nội dung người lớn: nhắc học sinh nên hỏi thủ thư hoặc thầy cô. Không hỏi hay lưu thông tin cá nhân. Không bịa nội dung sách ngoài các nhãn; nếu không chắc hãy nói rõ. Cuối câu trả lời nhắc ngắn rằng học sinh là người quyết định. Trả lời bằng tiếng Việt, dưới 160 từ, văn bản thuần không dùng markdown, dùng dấu • đầu dòng. Nếu học sinh nêu một bộ phim hoặc sách ngoài kho, hãy nói ngắn bạn hiểu tác phẩm đó nói về điều gì (nếu không chắc thì nói rõ), rồi gợi ý sách trong kho có chủ đề tương tự. Nếu học sinh nói ngoài chủ đề sách thì nhẹ nhàng đưa về sách.";
+const CAT=B.map(b=>"- "+b.t+" – "+b.a+" ["+b.g+"]"+(mature(b)?" [NL]":"")+": "+b.k).join("\n");
+const hist=[];let SM,busy=false,aiOff=false;
+async function getSample(){if(SM!==undefined)return SM;try{SM=window.claude?await claude.use("sample"):null}catch(e){SM=null}return SM}
+async function send(text){
+  if(busy)return;busy=true;q.disabled=true;let w;
+  add("me",d=>d.textContent=text);
+  const fallback=msg=>{aiOff=true;add("bot",d=>d.textContent=msg);localReply(text)};
+  try{
+    const sm=aiOff?null:await getSample();
+    if(!sm){if(!aiOff)fallback("Chưa dùng được AI ở lần mở trang này, nên mình dùng bộ máy gợi ý có sẵn nhé.");else localReply(text);return}
+    const hint=recommend(text).top.map(p=>B[p.i].t).join("; ");
+    const prompt=SYS+"\n\nKHO SÁCH:\n"+CAT+"\n\nGợi ý ban đầu từ bộ máy gợi ý (chỉ để tham khảo, bạn có thể đồng ý hoặc đổi): "+(hint||"(không có)")+"\n\nHội thoại trước:\n"+hist.slice(-8).map(h=>(h.r==="u"?"Học sinh: ":"Curator: ")+h.t).join("\n")+"\n\nHọc sinh: "+text+"\nCurator:";
+    let bub;w=add("bot",d=>{bub=d;d.classList.add("ai");d.innerHTML='<span class="dots"><i></i><i></i><i></i></span>'});
+    const res=await sm(prompt,{cache:false,modelTier:"quick",onText:({text:t})=>{bub.textContent=t;log.scrollTop=log.scrollHeight}});
+    bub.textContent=res.text;bub.appendChild(el("div","src","🤖 Trả lời bởi AI, chỉ gợi ý trong kho "+B.length+" sách. Hãy tự kiểm tra trước khi tin."));
+    hist.push({r:"u",t:text},{r:"c",t:res.text});
+  }catch(e){if(w)w.remove();
+    if(e&&e.code==="not_granted")fallback("Bạn chưa cho phép dùng AI, nên mình dùng bộ máy gợi ý có sẵn nhé.");
+    else if(e&&e.code==="rate_limited")add("bot",d=>d.textContent="AI đang bận, bạn thử lại sau ít phút nhé.");
+    else fallback("AI chưa trả lời được lúc này, mình dùng bộ máy gợi ý có sẵn thay nhé.")}
+  finally{busy=false;q.disabled=false;q.focus()}
+}
+
+/* ===== TRẮC NGHIỆM ===== */
+const Q=[
+{q:"Bạn đọc sách để…",o:[["🎢 Giải trí, phiêu lưu","phiêu lưu hài hước kịch tính"],["💪 Rèn kỹ năng, hiểu bản thân","kỹ năng sống truyền cảm hứng tâm lý"],["🔭 Học kiến thức mới","khoa học lịch sử tri thức"],["🌙 Tìm cảm xúc, lắng lại","tình cảm hoài niệm cảm động buồn"]]},
+{q:"Thể loại hợp gu bạn",m:1,o:[["🕵️ Trinh thám, bí ẩn","trinh thám bí ẩn suy luận"],["🚀 Khoa học viễn tưởng","khoa học viễn tưởng vũ trụ"],["💘 Tình cảm tuổi trẻ","tình cảm tuổi học trò tình yêu"],["🏛️ Lịch sử, văn hóa","lịch sử văn hóa"],["🧘 Triết lý, tâm lý","triết lý tâm lý"],["💼 Kinh doanh, tài chính","kinh doanh tài chính khởi nghiệp"],["🇻🇳 Văn học Việt Nam","Việt Nam hiện thực"]]},
+{q:"Tâm trạng hôm nay",o:[["😄 Vui, thích hài hước","hài hước nhẹ nhàng"],["🤔 Tò mò muốn khám phá","bí ẩn tò mò khoa học"],["😌 Trầm lắng","buồn tâm lý hoài niệm"],["🔥 Cần thêm động lực","truyền cảm hứng nghị lực"]]},
+{q:"Chủ đề bạn quan tâm gần đây",m:1,o:[["🤖 AI, công nghệ","AI công nghệ tương lai"],["🌌 Vũ trụ","vũ trụ thiên văn"],["👨‍👩‍👧 Gia đình, tuổi thơ","gia đình tuổi thơ"],["⚖️ Xã hội, chính trị","xã hội chính trị"],["💰 Tiền bạc, tương lai","tài chính tiền bạc"],["🌿 Sức khỏe, lối sống","sức khỏe lối sống"]]},
+{q:"Bạn có muốn thêm 1 cuốn “khám phá” ngoài vùng quen thuộc?",o:[["✨ Có, cho mình thử cái mới","yes"],["🙅 Không, chỉ đúng gu thôi","no"]]}];
+Q[1].q="Bạn hay lang thang ở khu sách nào?";Q[1].o=D.map(([g],i)=>[EMO[i]+" "+g,g]);
+const TF={};B.forEach(b=>b.k.split(", ").forEach(k=>{const t=k.toLowerCase();TF[t]=(TF[t]||0)+1}));
+Q[3].q="Chủ đề làm bạn tò mò";Q[3].o=Object.entries(TF).filter(([t,c])=>c>=2&&t.length<=22&&!/^(kinh điển|nhân văn)$/.test(t)).sort((a,b)=>b[1]-a[1]).slice(0,16).map(x=>["🔖 "+x[0],x[0]]);
+const sel=Q.map(()=>new Set());
+function renderQuiz(){quizv.textContent="";sel.forEach(s=>s.clear());
+  quizv.appendChild(el("p","hint","Chọn vài ô hợp với bạn, càng chọn nhiều mình càng hiểu gu của bạn. Ô nào không chắc cứ bỏ qua nhé."));
+  {const fc=el("div","q"),fi=el("input");fc.appendChild(el("h3","","⭐ Cuốn sách hoặc bộ phim bạn mê nhất? (không bắt buộc)"));
+    fi.id="fav";fi.placeholder="Ví dụ: Harry Potter, Conan, Mắt Biếc, Interstellar…";fi.autocomplete="off";fi.maxLength=80;
+    fc.append(fi,el("p","hint","Mình sẽ tìm sách có nội dung tương tự. Đừng nhập thông tin cá nhân."));quizv.appendChild(fc)}
+  Q.forEach((qq,qi)=>{const c=el("div","q"),o=el("div","opts");c.appendChild(el("h3","",(qi+1)+". "+qq.q+(qq.m?" (chọn nhiều)":"")));
+    qq.o.forEach((x,oi)=>{const b=el("button","opt",x[0]);b.type="button";b.onclick=()=>{const s=sel[qi];if(qq.m){s.has(oi)?s.delete(oi):s.add(oi)}else{s.clear();s.add(oi)}
+      o.querySelectorAll(".opt").forEach((y,j)=>y.classList.toggle("on",s.has(j)))};o.appendChild(b)});c.appendChild(o);quizv.appendChild(c)});
+  {const fr=el("div","q"),ta=el("textarea"),ex=el("div","exs");fr.appendChild(el("h3","","✍️ Muốn nói rõ hơn? Viết thêm bằng lời của bạn (không bắt buộc)"));
+    ta.id="free";ta.rows=3;ta.maxLength=200;ta.placeholder="Ví dụ: mình thích truyện bí ẩn, nhiều tình tiết bất ngờ…";
+    ["Mình thích truyện bí ẩn, nhiều bất ngờ","Mình muốn hiểu hơn về tuổi trẻ và tình bạn","Mình tò mò về tương lai của công nghệ"].forEach(t=>{const b=el("button","chip",t);b.type="button";b.onclick=()=>{ta.value=t};ex.appendChild(b)});
+    fr.append(ta,ex);quizv.appendChild(fr)}
+  const go=el("button","go big","✨ Xem gợi ý cho mình"),rs=el("button","chip","↺ Làm lại"),br=el("div","btnrow");go.type=rs.type="button";go.onclick=quizResult;rs.onclick=renderQuiz;br.append(go,rs);
+  const res=el("div","");res.id="qres";quizv.append(br,res)}
+let qbusy=false;
+async function quizResult(){if(qbusy)return;const res=document.getElementById("qres");res.textContent="";
+  const pk=Q.map((qq,qi)=>[...sel[qi]].map(oi=>qq.o[oi])),fav=document.getElementById("fav").value.trim(),free=document.getElementById("free").value.trim();
+  if(!fav&&!free&&!pk.slice(0,4).some(a=>a.length)){res.appendChild(el("p","hint","Hãy chọn vài ô, nhập 1 sách/phim hoặc viết vài chữ về gu của bạn nhé!"));return}
+  qbusy=true;res.appendChild(el("p","hint","⏳ Đang tìm sách hợp với bạn…"));
+  try{
+  let kw=pk.slice(0,4).flatMap((a,qi)=>a.flatMap(x=>qi===1?[x[1],x[1]]:[x[1]])).join(" "),note="",favKw="";
+  if(free)kw+=" "+free;
+  if(fav){kw+=" giong "+fav;
+    if(recommend(kw).intro.startsWith("Vì bạn thích"))note="📖 Mình thấy “"+fav+"” có trong kho nên so trực tiếp nội dung với các sách khác.";
+    else{const sm=aiOff?null:await getSample();
+      if(!sm)note="AI chưa dùng được nên mình chưa đọc được nội dung “"+fav+"”, gợi ý chủ yếu theo các lựa chọn của bạn.";
+      else try{const PR="Học sinh lớp 10 nói rằng mình mê tác phẩm: “"+fav+"” (có thể là sách hoặc phim). Hãy xác định đó là tác phẩm nào, rồi rút 6–10 từ khóa chủ đề hoặc thể loại ngắn gọn bằng tiếng Việt phản ánh đúng nội dung (ví dụ: trinh thám, phiêu lưu, tình cảm, khoa học viễn tưởng, vũ trụ, tuổi thơ, gia đình, tâm lý, lịch sử, triết lý, nghị lực, công nghệ). Nếu không chắc đó là tác phẩm nào thì đặt known=false và kw rỗng. Chỉ trả về JSON dạng {\"known\":true,\"what\":\"tên và loại (sách hoặc phim)\",\"kw\":[\"...\"]}.";
+        const j=sm.json?await sm.json(PR,{modelTier:"quick"}):JSON.parse((await sm(PR)).text.match(/\{[\s\S]*\}/)[0]);
+        if(j&&j.known&&Array.isArray(j.kw)&&j.kw.length){const k=j.kw.slice(0,10).map(String);favKw=k.join(" ");note="🎬 Mình hiểu bạn thích “"+String(j.what||fav).slice(0,80)+"”, với các chủ đề: "+k.join(", ")+". Nếu mình hiểu sai, hãy sửa lại tên rồi bấm lại nhé."}
+        else note="Mình chưa nhận ra “"+fav+"”, nên gợi ý chủ yếu theo các lựa chọn của bạn."}
+      catch(e){if(e&&e.code==="not_granted")aiOff=true;note="Mình chưa đọc được nội dung “"+fav+"” lần này, nên gợi ý theo các lựa chọn của bạn."}}}
+  const q2=kw+(favKw?" "+favKw+" "+favKw:""),t0=performance.now(),r=recommend(q2),row=track(r,fav?"Trắc nghiệm + "+fav:"Trắc nghiệm",performance.now()-t0),
+    wantNew=!pk[4].length||pk[4][0][1]==="yes";
+  res.textContent="";
+  if(note)res.appendChild(el("p","hint",note));
+  if(!r.top.length){res.appendChild(el("p","hint","Mình chưa tìm được sách khớp. Thử chọn thêm đáp án hoặc nhập tên khác nhé!"));return}
+  res.appendChild(el("h3","",fav?"🎯 Sách tương tự “"+fav+"” và hợp gu bạn":"🎯 Gợi ý cho bạn"));r.top.forEach(p=>res.appendChild(card(p,false,row)));
+  if(wantNew&&r.explore)res.appendChild(card(r.explore,true,row));
+  const acts=el("div","acts"),a=el("button","chip","💬 Hỏi AI giải thích thêm"),b=el("button","chip","↺ Làm lại");a.type=b.type="button";
+  a.onclick=()=>{showTab("chat");send("Mình vừa làm trắc nghiệm."+(fav?" Mình mê “"+fav+"”.":"")+(free?" Mình muốn nói thêm: "+free+".":"")+" Lựa chọn của mình: "+pk.slice(0,4).flat().map(x=>x[0].replace(/^\S+\s/,"")).join("; ")+". Bộ máy gợi ý đề xuất: "+r.top.map(p=>B[p.i].t).join("; ")+". Bạn giải thích vì sao hợp và gợi ý thêm giúp mình nhé.")};
+  b.onclick=renderQuiz;acts.append(a,b);res.appendChild(acts);res.scrollIntoView({behavior:"smooth",block:"nearest"})
+  }finally{qbusy=false}}
+
+function hello(){log.textContent="";add("bot",d=>d.textContent="Chào bạn! 👋 Mình là Smart Library Curator, thủ thư AI của kho "+B.length+" đầu sách. Hãy kể 2–3 thể loại hoặc chủ đề bạn thích, hoặc nhập một cuốn sách, bộ phim bạn đã mê. Mình sẽ gợi ý kèm lý do và 1 cuốn “khám phá” ngoài vùng quen thuộc. Bạn cũng có thể sang tab 📝 Trắc nghiệm để chọn đáp án nhanh.")}
+hello();
+["🕵️ Mình thích trinh thám, suy luận","🏡 Thích tuổi thơ, làng quê, tình cảm","🚀 Mình mê vũ trụ, khoa học","📖 Mình muốn sách giống Sapiens","🤖 Mình quan tâm AI và tương lai","🎬 Mình thích phim Interstellar","🎲 Ngẫu nhiên"].forEach(t=>{const b=el("button","chip",t);b.type="button";b.onclick=()=>send(t.replace(/^\S+\s/,""));chips.appendChild(b)});
+f.onsubmit=e=>{e.preventDefault();const v=q.value.trim();if(v){q.value="";send(v)}};
+clr.onclick=e=>{e.preventDefault();hist.length=0;hello()};
+</script>
+</body>
+</html>
